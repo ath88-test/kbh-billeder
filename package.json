@@ -5,10 +5,10 @@
   "main": "server.js",
   "browserslist": "last 4 versions",
   "scripts": {
-    "gulp": "gulp",
-    "index": "node indexing.js",
+    "gulp": "gulp -f assets-pipeline/gulpfile.js",
+    "index": "node ./webapplication/indexing.js",
     "start:dev": "concurrently \"npm run gulp\" \"npm run start:nodemon\"",
-    "start:nodemon": "nodemon --watch . start.js",
+    "start:nodemon": "nodemon --watch . ./webapplication/start.js",
     "start:inspect": "kill-port --port 9229 && node --inspect=0.0.0.0:9229 start.js",
     "start:nodemon-inspect": "nodemon --delay 80ms --watch . --exec 'npm run start:inspect'"
   },

@@ -1,4 +1,4 @@
-const config = require('../lib/config');
+const config = require('../webapplication/lib/config');
 if(process.browser) {
   /* global clientSideConfig */
   if(clientSideConfig) {

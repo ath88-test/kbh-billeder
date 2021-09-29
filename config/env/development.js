@@ -24,7 +24,6 @@ const development = _.merge({}, base, {
   },
   features: {
     feedback: true,
-    motifTagging: true,
     requireEmailVerification: true,
     users: true
   }

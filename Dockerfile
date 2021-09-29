@@ -12,33 +12,21 @@ COPY package*.json ./
 RUN npm install
 
 # build frontend bundle
-COPY gulpfile.js .
 COPY config config
 COPY config.js .
-COPY app app
 COPY shared shared
-COPY build build
-COPY lib lib
-COPY bower.json .
-COPY bower_components bower_components
+COPY assets-pipeline assets-pipeline
 
-RUN node node_modules/.bin/gulp build
+# Would prefer to not copy in webapplication before gulpfile run, but
+# webapplication/lib/config is used in assets-pipeline - should probably
+# be extracted to shared or something
+COPY webapplication webapplication
 
-# copy in server files
-COPY start.js .
-COPY server.js .
-COPY controllers controllers
-COPY services services
-COPY indexing indexing
-COPY updates updates
-COPY indexing.js .
-COPY asset-mapping.js .
-COPY auth.js .
-COPY keystone keystone
+RUN node node_modules/.bin/gulp build -f assets-pipeline/gulpfile.js
 
 # TODO - dont inject env during build time
 COPY .env .
 
 EXPOSE 9000
 
-CMD node start.js
+CMD node webapplication/start.js
