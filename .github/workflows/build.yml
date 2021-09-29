@@ -9,6 +9,7 @@ env:
   CLUSTER_NAME: kbh-billeder-cluster-1
   ZONE: europe-west1-b
   CONTAINER_REGISTRY: eu.gcr.io
+  REGISTRY: ghcr.io
 
 jobs:
   setup-build-publish-deploy:
@@ -28,6 +29,12 @@ jobs:
     - name: Setup docker
       run: gcloud --quiet auth configure-docker $CONTAINER_REGISTRY
 
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup kubectl
       uses: google-github-actions/get-gke-credentials@v0.2.1
