@@ -4,12 +4,12 @@ on:
 - push
 
 env:
+  IMAGE: ${{ github.event.repository.name }}
   GKE_PROJECT: kbh-billeder
-  IMAGE: kbh-billeder
   CLUSTER_NAME: kbh-billeder-cluster-1
   ZONE: europe-west1-b
   CONTAINER_REGISTRY: eu.gcr.io
-  REGISTRY: ghcr.io
+  CACHE_REGISTRY: ghcr.io
 
 jobs:
   setup-build-publish-deploy:
@@ -29,19 +29,19 @@ jobs:
     - name: Setup docker
       run: gcloud --quiet auth configure-docker $CONTAINER_REGISTRY
 
-    - name: Log in to the Container registry
+    - name: Log in to the Container registry cache
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
       with:
-        registry: ${{ env.REGISTRY }}
+        registry: ${{ env.CACHE_REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Setup kubectl
-      uses: google-github-actions/get-gke-credentials@v0.2.1
-      with:
-        credentials: ${{ secrets.GKE_SA_KEY }}
-        cluster_name: ${{ env.CLUSTER_NAME }}
-        location: ${{ env.ZONE }}
+    #
+    # - name: Setup kubectl
+    #   uses: google-github-actions/get-gke-credentials@v0.2.1
+    #   with:
+    #     credentials: ${{ secrets.GKE_SA_KEY }}
+    #     cluster_name: ${{ env.CLUSTER_NAME }}
+    #     location: ${{ env.ZONE }}
 
     - name: Build image
       run: |-
@@ -50,16 +50,22 @@ jobs:
         NODE_ENV=beta
         EOF
         docker build \
+          --cache-from=$CACHE_REGISTRY/$GKE_PROJECT/$IMAGE \
+          --tag "$CACHE_REGISTRY/$GKE_PROJECT/$IMAGE" \
           --tag "$CONTAINER_REGISTRY/$GKE_PROJECT/$IMAGE:$GITHUB_SHA" \
           --tag "$CONTAINER_REGISTRY/$GKE_PROJECT/$IMAGE:latest" \
           .
 
-    - name: Publish docker image
-      if: ${{ github.ref == 'refs/heads/master' }}
+    - name: Publish docker cache
       run: |-
-        docker push "$CONTAINER_REGISTRY/$GKE_PROJECT/$IMAGE" --all-tags
-
-    - name: Deploy to beta environment
-      if: ${{ github.ref == 'refs/heads/master' }}
-      run: |-
-        kubectl -n beta set env deployment/frontend DEPLOYED_AT="`date`"
+        docker push "$CACHE_REGISTRY/$GKE_PROJECT/$IMAGE" --all-tags
+    #
+    # - name: Publish docker image
+    #   if: ${{ github.ref == 'refs/heads/master' }}
+    #   run: |-
+    #     docker push "$CONTAINER_REGISTRY/$GKE_PROJECT/$IMAGE" --all-tags
+    #
+    # - name: Deploy to beta environment
+    #   if: ${{ github.ref == 'refs/heads/master' }}
+    #   run: |-
+    #     kubectl -n beta set env deployment/frontend DEPLOYED_AT="`date`"
